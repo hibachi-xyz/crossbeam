@@ -160,6 +160,12 @@ impl<K, V> Clone for NodeRef<'_, K, V> {
 }
 impl<K, V> Copy for NodeRef<'_, K, V> {}
 
+// `NodeRef` replaced a `&'a Node<K, V>` field, keeping provenance over the tower tail that the
+// reference lacked. `NonNull` is `!Send + !Sync`, so it must restore what that reference conveyed,
+// or `Entry`/`RefEntry` stop being `Send` and cannot be held across an await.
+unsafe impl<'a, K, V> Send for NodeRef<'a, K, V> where &'a Node<K, V>: Send {}
+unsafe impl<'a, K, V> Sync for NodeRef<'a, K, V> where &'a Node<K, V>: Sync {}
+
 impl<K, V> Node<K, V> {
     /// Allocates a node.
     ///
